@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>David's Game of Trees</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" href="/assets/icon64.png"><!--TODO: switch to tree-->
+  <meta property="description" content="A Card game clone. Built with Javascript and Node.js. Open source on Github.">
+  <meta property="og:title" content="An example .io game">
+  <meta property="og:description" content="A complete example multiplayer .io web game implemented from scratch. Built with Javascript and Node.js. Open source on Github.">
+  <meta property="og:image" content="/assets/icon1200.png"><!--TODO: switch to tree-->
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+  <div id="opening-menu" class="hidden">
+    <h1>David's Game of Trees</h1>
+    <p>
+      Score the most points by creating paths of trees.
+      <br />
+      The rules are like the card game "Arboretum".
+    </p>
+    <hr />
+    <p>
+      <!-- <br /> -->
+      Rules link <!--TODO: add link to rules-->
+      <br />
+      See the source code on <!--TODO: add link to src-->.
+      <br />
+      Created by David.
+    </p>
+    <hr />
+    <p>
+      <strong>Username:</strong>
+      <input type="text" id="username-input" placeholder="Enter your username" />
+    <button id="create-game-button">CREATE GAME</button>
+    <button id="join-game-button">JOIN GAME</button>
+  </div>
+  <div id="wait-for-players-menu" class="hidden">
+    <table>
+      <tr>
+        <th>Waiting for players to join the game...</th>
+      </tr>
+      <tr><td></td></tr>
+      <tr><td></td></tr>
+      <tr><td></td></tr>
+      <tr><td></td></tr>
+      <tr><td></td></tr>
+    </table>
+    <button id="start-game-button">START GAME</button>
+  </div>
+  <div id="choose-game-to-join-menu" class="hidden">
+    <table>
+      <tr>
+        <th>Game Name</th>
+        <th>Join button</th>
+      </tr>
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
+    </table>
+  </div>
+  <div id="disconnect-modal" class="hidden">
+    <div>
+      <h2>Disconnected from Server </h2>
+      <hr />
+      <button id="reconnect-button">RECONNECT</button>
+    </div>
+  </div>
+  <div id="chat-container" class="hidden">
+    <div id="chat-log"></div>
+    <input type="text" id="chat-input" placeholder="Type a message..." />
+  </div>
+</body>
+</html>

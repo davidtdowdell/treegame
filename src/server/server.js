@@ -1,0 +1,82 @@
+const express = require('express');
+const webpack = require('webpack');
+const webpackDevMiddleware = require('webpack-dev-middleware');
+const socketio = require('socket.io');
+
+const Constants = require('../shared/constants');
+//const Game = require('./game');
+const GameList = require('./gameList');
+const webpackConfig = require('../../webpack.dev.js');
+
+// Setup an Express server
+const app = express();
+app.use(express.static('public'));
+
+if (process.env.NODE_ENV === 'development') {
+  // Setup Webpack for development
+  const compiler = webpack(webpackConfig);
+  app.use(webpackDevMiddleware(compiler));
+} else {
+  // Static serve the dist/ folder in production
+  app.use(express.static('dist'));
+}
+
+// Listen on port
+const port = process.env.PORT || 3000;
+const server = app.listen(port);
+console.log(`Server listening on port ${port}`);
+
+// Setup socket.io
+const io = socketio(server);
+
+// Listen for socket.io connections
+io.on('connection', socket => {
+  console.log('Player connected!', socket.id);
+  // Listen for game creation
+  socket.on(Constants.MSG_TYPES.CREATE_GAME,createGame);
+  // Listen for game list request
+  socket.on(Constants.MSG_TYPES.ASK_FOR_GAME_LIST, getGameList);
+  // Listen for game joining
+  socket.on(Constants.MSG_TYPES.JOIN_GAME, joinGame);
+  // Listen for game starting
+  socket.on(Constants.MSG_TYPES.START_GAME, startGame);
+
+
+  socket.on(Constants.MSG_TYPES.CHAT, (message) => {
+    console.log('Chat message received:', message);
+    const username = socket.username || 'Anonymous'; // Replace with actual username logic
+    // Broadcast the chat message to all players
+    io.emit(Constants.MSG_TYPES.CHAT, { username, message });
+  });
+
+  socket.on(Constants.MSG_TYPES.INPUT, handleInput);
+  socket.on('disconnect', onDisconnect);
+});
+
+// Setup the Game List
+const gameList = new GameList();
+
+function createGame(username) {
+  gameList.createGame(this, username);
+}
+
+function getGameList() {
+  gameList.getAvailableGames(this);
+}
+
+function joinGame(gameId, username) {
+  console.log(`Joining game ${gameId} as ${username}`);
+  gameList.joinGame(this, gameId, username);
+}
+
+function startGame() {
+  gameList.startGame(this);
+}
+
+function handleInput(dir) {
+  game.handleInput(this, dir);
+}
+
+function onDisconnect() {
+  //game.removePlayer(this);
+}
