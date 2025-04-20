@@ -10,7 +10,15 @@
   <meta property="og:image" content="/assets/icon1200.png"><!--TODO: switch to tree-->
 </head>
 <body>
-  <canvas id="game-canvas"></canvas>
+  <div id="game-view" class="hidden">
+    <h1>Game View of <span id="game-name-value"></span></h1>
+    <div id="game-info">
+      <div id="turn-indicator"><span id="turn-indicator"></div>
+    </div>
+    <div id="game-canvas-span"></div>
+    <div id="draw-buttons"> </div>
+  </div>
+  
   <div id="opening-menu" class="hidden">
     <h1>David's Game of Trees</h1>
     <p>

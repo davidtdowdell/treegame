@@ -56,6 +56,10 @@ export const startGame = () => {
   socket.emit(Constants.MSG_TYPES.START_GAME);
 }
 
+export const sendDrawRequest = (discard_id) => {
+  socket.emit(Constants.MSG_TYPES.DRAW_REQUEST, discard_id);
+}
+
 export const play = username => {
   socket.emit(Constants.MSG_TYPES.JOIN_GAME, username);
 };

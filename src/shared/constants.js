@@ -20,8 +20,14 @@ module.exports = Object.freeze({
     JOIN_GAME: 'join_game',
     START_GAME: 'start_game',
     GAME_UPDATE: 'update',
+    DRAW_REQUEST: 'draw_request',
     INPUT: 'input',
     GAME_OVER: 'dead',
     CHAT: 'chatMessage',
+  },
+  GAME_STATES: {
+    DRAW: 'draw',
+    PLAY: 'play',
+    DISCARD: 'discard',
   },
 });

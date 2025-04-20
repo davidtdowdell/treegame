@@ -24,6 +24,17 @@ button {
   transition: background-color 0.2s ease;
 }
 
+#draw-buttons button {
+  font-size: 18px;
+  outline: none;
+  border: none;
+  color: rgb(0, 0, 0);
+  background-color: blue;
+  padding: 5px 20px;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
 button:hover {
   background-color: rgb(230, 230, 230);
 }
@@ -36,9 +47,11 @@ button:focus {
   display: none !important;
 }
 
-#game-canvas {
-  width: 100%;
-  height: 100%;
+
+
+
+#game-view{
+  color: white
 }
 
 #opening-menu, #choose-game-to-join-menu, #wait-for-players-menu {

@@ -40,6 +40,8 @@ io.on('connection', socket => {
   socket.on(Constants.MSG_TYPES.JOIN_GAME, joinGame);
   // Listen for game starting
   socket.on(Constants.MSG_TYPES.START_GAME, startGame);
+  // Listen for draw request
+  socket.on(Constants.MSG_TYPES.DRAW_REQUEST, processDrawRequest);
 
 
   socket.on(Constants.MSG_TYPES.CHAT, (message) => {
@@ -71,6 +73,10 @@ function joinGame(gameId, username) {
 
 function startGame() {
   gameList.startGame(this);
+}
+
+function processDrawRequest(discard_id) {
+  gameList.processDrawRequest(this, discard_id);
 }
 
 function handleInput(dir) {

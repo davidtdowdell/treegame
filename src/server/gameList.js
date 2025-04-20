@@ -1,29 +1,7 @@
 const Constants = require('../shared/constants');
 
+const TreeGame = require('./treeGame');
 
-class Game {
-  constructor(name, id) {
-    this.name = name;
-    this.id = id;
-    this.players = {};
-    this.state = {};
-    this.playerNames = [];
-    this.canJoin = true;
-  }
-  addPlayer(socket, username) {
-    console.log(`Adding player ${username} to game ${this.name}`);
-    this.players[socket.id] = { username, socket };
-    this.playerNames.push(username);
-    //socket.join(this.id);
-    //send player list to all players
-    for (const player in this.players) {
-      console.log(`Sending player list to ${this.players[player].username}`);
-      this.players[player].socket.emit(Constants.MSG_TYPES.PLAYER_LIST, this.playerNames);
-    }
-  }
-
-  
-}
 
 class GameList {
   constructor() {
@@ -32,7 +10,7 @@ class GameList {
   createGame(socket, username) {
     console.log(`Creating game for ${username}`);
     //const gameId = this.generateGameId();
-    const game = new Game(`${username}'s game`, socket.id);
+    const game = new TreeGame(`${username}'s game`, socket.id);
     this.games[socket.id] = game;
     game.addPlayer(socket, username);
     //socket.join(socket.id);
@@ -59,12 +37,22 @@ class GameList {
     const game = Object.values(this.games).find(game => game.players[socket.id]);
     if (game) {
       console.log(`Starting game ${game.name}`);
-      game.canJoin = false;
+      game.start()
       //socket.join(game.id);
       for (const player in game.players) {
         console.log(`Starting game for ${game.players[player].username}`);
         //game.players[player].socket.emit(Constants.MSG_TYPES.GAME_UPDATE, game.getState());
       }
+    } else {
+      console.log(`Game not found for player ${socket.id}`);
+    }
+  }
+  processDrawRequest(socket, discard_id) {
+    //determine which game the player is in
+    const game = Object.values(this.games).find(game => game.players[socket.id]);
+    if (game) {
+      console.log(`Processing draw request for ${socket.id}`);
+      game.processDrawRequest(socket, discard_id);
     } else {
       console.log(`Game not found for player ${socket.id}`);
     }
