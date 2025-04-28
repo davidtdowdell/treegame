@@ -6,8 +6,11 @@ const chooseGameToJoinMenu = document.getElementById('choose-game-to-join-menu')
 export function listPlayers(data) {
     const rows = document.querySelectorAll('#wait-for-players-menu table tr');
     console.log('listPlayers', data);
-    for (let i = 0; i < data.length; i++) {
-        rows[i + 1].innerHTML = `<td>${escape(data[i].slice(0, 15)) || 'Anonymous'}</td>`;
+    let i = 0
+    //for values in data dictionary, if value is null, set to Anonymous
+    for (const value of Object.values(data)) {
+        rows[i + 1].innerHTML = `<td>${escape(value.slice(0, 15)) || 'Anonymous'}</td>`;
+        i++;
     }
 }
 

@@ -4,7 +4,7 @@ import { debounce } from 'throttle-debounce';
 import { getAsset } from './assets';
 import { getCurrentState } from './state';
 import { set } from 'lodash';
-import { sendDrawRequest } from './networking';
+import { sendDrawRequest, sendPlayRequest, sendDiscardRequest } from './networking';
 
 const Constants = require('../shared/constants');
 
@@ -30,67 +30,326 @@ function setCanvasDimensions() {
   context.scale(dpr, dpr);
   
 }
-function displayCard(context, species, number, x, y, width, height){
-  console.log(`Drawing card: ${species} ${number} at (${x}, ${y}) with size (${width}, ${height})`);
-  context.fillStyle = 'white';
-  context.font = '9px Arial';
-  context.fillText(`Species: ${species}`, x, y + 20);
-  context.fillText(`Number: ${number}`, x, y + 40);
-  //draw a rectangle for the card 
-  context.strokeStyle = 'white';
-  context.lineWidth = 2;
-  context.strokeRect(x, y, width, height);
+
+const speciesColors = [
+  //10 different colors for the species
+  'red',
+  'blue',
+  'green',
+  'yellow',
+  'purple',
+  'orange',
+  'pink',
+  'brown',
+  'cyan',
+  'magenta',
+];
+
+class Card {
+  constructor(species, number, row = null, col = null) {
+    this.species = species;
+    this.number = number;
+    this.row = row;
+    this.col = col;
+    this.x = null;
+    this.y = null;
+    this.width = null;
+    this.height = null;
+    this.north = null;
+    this.south = null;
+    this.east = null;
+    this.west = null;
+  }
+  displayCard(context, x, y, width, height, highlight = false) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    //draw a rectangle for the card, fill with species color
+    if (this.species !== null) {
+      context.fillStyle = speciesColors[this.species];
+      context.fillRect(x, y, width, height);
+    }
+    //draw a border around the card
+    context.strokeStyle = highlight? 'white' : 'black';
+    context.lineWidth = 2;
+    context.strokeRect(x, y, width, height);
+    if (this.number !== null) {
+      // draw a circle in the middle of the card
+      context.beginPath();
+      context.arc(x + width / 2, y + height / 2, width / 3, 0, Math.PI * 2); 
+      context.fillStyle = 'white';
+      context.fill();
+      context.strokeStyle = 'black';
+      context.lineWidth = 2;
+      context.stroke();
+      context.closePath();
+      //draw the number in the circle
+      context.fillStyle = 'black';
+      context.font = '20px Arial';
+      context.fillText(this.number, x + width / 2 - 5, y + height / 2 + 5); 
+    }
+  }
+  //check if the card is clicked
+  isClicked(mouseX, mouseY) {
+    if (mouseX > this.x && mouseX < this.x + this.width && mouseY > this.y && mouseY < this.y + this.height) {
+      return true;
+    }
+    return false; 
+  }
+    
 }
 
-function drawHand(yourHand, yourHandCanvas, yourHandContext){
-  //make the canvas wide enough for 9 cards
-  yourHandCanvas.width = 700;
-  yourHandCanvas.height = 100;
-  yourHandCanvas.style.width = '500px';
-  yourHandCanvas.style.height = '100px';
-  yourHandCanvas.style.backgroundColor = 'green';
-  yourHandContext.fillStyle = 'white';
-  //draw the cards in your hand
-  const cardWidth = 50;
-  const cardHeight = 70;
-  const cardSpacing = 10;
-  let x = 20;
-  let y = 20;
-  yourHand.forEach((card) => {
-    displayCard(yourHandContext, card.species, card.number, x, y, cardWidth, cardHeight);
-    x += cardWidth + cardSpacing;
-  });
+let selectedCard = null;
+
+
+class Hand {
+  constructor(canvas, context, label, isDiscard = false) {
+    this.handCanvas = canvas;
+    this.handContext = context;
+    this.handCanvas.width = 700;
+    this.handCanvas.height = 100;
+    this.handCanvas.style.width = '700px';
+    this.handCanvas.style.height = '100px';
+    this.handCanvas.style.backgroundColor = 'green';
+    this.handContext.fillStyle = 'white';
+    this.label = label;
+    this.isDiscard = isDiscard
+    this.cards = [];
+    selectedCard = null;
+    this.selectedCardIndex = null;
+  }
+  addCard(species, number) {
+    this.cards.push(new Card(species, number));
+  }
+  addCards(cards) {
+    cards.forEach((card) => {
+      this.addCard(card.species, card.number);
+    });
+  }
+  displayHand() {
+    // clear the canvas
+    this.handContext.clearRect(0, 0, this.handCanvas.width, this.handCanvas.height);
+    //Put label inside the canvas
+    this.handContext.font = '18px Arial';
+    this.handContext.fillText(this.label, 20, 20);
+    // display each card in a row
+    const cardWidth = 50;
+    const cardHeight = 70;
+    const cardSpacing = 10;
+    let x = 20;
+    let y = 20;
+    if (this.isDiscard) {
+      // iterate through this.cards in reverse order
+      this.cards.reverse();
+    }
+    this.cards.forEach((card, index) => {
+      card.displayCard(this.handContext, x, y, cardWidth, cardHeight, this.selectedCardIndex === index);
+      x += cardWidth + cardSpacing;
+    });
+    if (!this.isDiscard) {
+      // add event listener for mouse click
+      this.handCanvas.addEventListener('click', (event) => {
+        const rect = this.handCanvas.getBoundingClientRect();
+        const mouseX = (event.clientX - rect.left);
+        const mouseY = event.clientY - rect.top;
+        this.checkCardClick(mouseX, mouseY);
+      });
+    }
+  }
+  checkCardClick(mouseX, mouseY) {
+    this.cards.forEach((card) => {
+      if (card.isClicked(mouseX, mouseY)) {
+        selectedCard = card;
+        this.selectedCardIndex = this.cards.indexOf(card);
+        //redraw the hand to highlight the selected card
+        this.displayHand();
+      }
+    });
+  }
+  
 }
 
-export function drawButtons(state, discards){
+class GardenBoard {
+  constructor(canvas, context) {
+    this.canvas = canvas;
+    this.context = context;
+    this.canvas.width = 800;
+    this.canvas.height = 800;
+    this.canvas.style.width = '800px';
+    this.canvas.style.height = '800px';
+    this.canvas.style.backgroundColor = 'red';
+    this.context.fillStyle = 'white';
+    this.cardWidth = 50;
+    this.cardHeight = 70;
+    this.cardSpacing = 10;
+    this.ghostCards = [];
+    this.cards = [];
+    this.maxCol = 0;
+    this.maxRow = 0;
+    this.minCol = 0;
+    this.minRow = 0;
+  }
+  setMaxAndMinRowCol(serverCards) {
+    serverCards.forEach((card) => {
+      if (card.row < this.minRow) {
+        this.minRow = card.row;
+      }
+      if (card.row > this.maxRow) {
+        this.maxRow = card.row;
+      }
+      if (card.col < this.minCol) {
+        this.minCol = card.col;
+      }
+      if (card.col > this.maxCol) {
+        this.maxCol = card.col;
+      }
+    });
+    // increment maxRow and maxCol by 1 to make space for the new cards
+    this.maxRow++;
+    this.maxCol++;
+    // decrement minRow and minCol by 1 to make space for the new cards
+    this.minRow--;
+    this.minCol--;
+    //calculate card size to fit on the board
+    const boardWidth = this.canvas.width - 40;
+    const boardHeight = this.canvas.height - 40;
+    this.cardWidth = (boardWidth - this.cardSpacing * (this.maxCol - this.minCol)) / (this.maxCol - this.minCol + 1);
+    this.cardHeight = (boardHeight - this.cardSpacing * (this.maxRow - this.minRow)) / (this.maxRow - this.minRow + 1);
+  }
+
+  displayBoard(text, serverCards = []) {
+    //put text inside the canvas to display the board
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.font = '18px Arial';
+    this.context.fillText(text, 20, 20);
+    console.log(serverCards);
+    this.setMaxAndMinRowCol(serverCards);
+    // from minRow to maxRow, draw the cards
+    let x = 20;
+    let y = 50;
+    serverCards.forEach((card) => {
+      //calculate the x and y position of the card
+      x = 20 + (card.col - this.minCol) * (this.cardWidth + this.cardSpacing);
+      y = 50 + (card.row - this.minRow) * (this.cardHeight + this.cardSpacing);
+      //create a new card object
+      const newCard = new Card(card.species, card.number, card.row, card.col);
+      newCard.displayCard(this.context, x, y, this.cardWidth, this.cardHeight);
+      // check if there is a card in the above row
+      if (card.row > this.minRow) {
+        const northCard = serverCards.find((c) => c.row === card.row - 1 && c.col === card.col);
+        if (!northCard) {
+          //create a ghost card in that position
+          const ghostCard = new Card(null, null, card.row - 1, card.col);
+          ghostCard.displayCard(this.context, x, y - this.cardHeight - this.cardSpacing, this.cardWidth, this.cardHeight, true);
+          this.ghostCards.push(ghostCard);
+        }
+      }
+      // check if there is a card in the below row
+      if (card.row < this.maxRow) {
+        const southCard = serverCards.find((c) => c.row === card.row + 1 && c.col === card.col);
+        if (!southCard) {
+          //create a ghost card in that position
+          const ghostCard = new Card(null, null, card.row + 1, card.col);
+          ghostCard.displayCard(this.context, x, y + this.cardHeight + this.cardSpacing, this.cardWidth, this.cardHeight, true);
+          this.ghostCards.push(ghostCard);
+        }
+      }
+      // check if there is a card in the left column  
+      if (card.col > this.minCol) {
+        const westCard = serverCards.find((c) => c.row === card.row && c.col === card.col - 1);
+        if (!westCard) {
+          //create a ghost card in that position
+          const ghostCard = new Card(null, null, card.row, card.col - 1);
+          ghostCard.displayCard(this.context, x - this.cardWidth - this.cardSpacing, y, this.cardWidth, this.cardHeight, true);
+          this.ghostCards.push(ghostCard);
+        }
+      }
+      // check if there is a card in the right column
+      if (card.col < this.maxCol) {
+        const eastCard = serverCards.find((c) => c.row === card.row && c.col === card.col + 1);
+        if (!eastCard) {
+          //create a ghost card in that position
+          const ghostCard = new Card(null, null, card.row, card.col + 1);
+          ghostCard.displayCard(this.context, x + this.cardWidth + this.cardSpacing, y, this.cardWidth, this.cardHeight, true);
+          this.ghostCards.push(ghostCard);
+        }
+      }
+      
+    });
+
+
+    //Add click listener to the canvas
+    this.canvas.addEventListener('click', (event) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const mouseX = (event.clientX - rect.left);
+      const mouseY = event.clientY - rect.top;
+      this.checkCardClick(mouseX, mouseY);
+    });
+  }
+  checkCardClick(mouseX, mouseY) {
+    this.ghostCards.forEach((card) => {
+      if (card.isClicked(mouseX, mouseY) && selectedCard !== null) {
+        //TODO do something with the card
+        console.log(`ghost Card clicked: ${card.row} ${card.col}`);
+        selectedCard.row = card.row;
+        selectedCard.col = card.col;
+        sendPlayRequest(selectedCard);
+      }
+    });
+    // if there are no cards on the board
+    if (this.cards.length === 0 && selectedCard !== null) {
+      selectedCard.row = 0;
+      selectedCard.col = 0;
+      sendPlayRequest(selectedCard);
+    }
+  }
+}
+
+export function drawButtons(state, discards, playerNames, deckSize){
   // if draw state, make a draw button for each discard
   const drawButtons = document.getElementById('draw-buttons');
   drawButtons.innerHTML = '';
   if (state === 'draw') {
-    Object.entries(discards).forEach(([key, discard]) => {
-      //if the discard is not empty, create a button to draw the top card
-      if (discard.length > 0) {
-        const button = document.createElement('button');
-        button.innerText = `Draw ${discard[discard.length - 1].species} ${discard[discard.length - 1].number}`;
-        button.onclick = () => {
-          sendDrawRequest(Constants.MSG_TYPES.DRAW, key);
-        };
-        drawButtons.appendChild(button);
-      }
-    });
     //Also add a button to draw from the deck
     const button = document.createElement('button');
-    button.innerText = `Draw from deck`;
+    button.innerText = `Draw from deck (${deckSize} cards left)`;
     button.onclick = () => {
       sendDrawRequest(Constants.MSG_TYPES.DRAW, null);
     };
     drawButtons.appendChild(button);
-  } //end if
+    // Add a button to draw from each discard pile
+    for (const [key, discard] of Object.entries(discards)) {
+      //if discard is not empty, add a button
+      if (discard.length === 0) {
+        continue;
+      }
+      const button = document.createElement('button');
+      const playerName = playerNames[key];
+      button.innerText = `Draw from ${playerName}'s discard pile`;
+      button.onclick = () => {
+        console.log(`Discard pile ${key} clicked`);
+        sendDrawRequest(key);
+      };
+      drawButtons.appendChild(button);
+    }
+
+  }
+  //if discard state make a discard button for the selected card
+  if (state === 'discard') {
+    const discardButton = document.createElement('button');
+    discardButton.innerText = `Discard selected card`;
+    discardButton.onclick = () => {
+      sendDiscardRequest(selectedCard);
+    }
+    drawButtons.appendChild(discardButton);
+  };
+    
 }
 
 
 
-export function renderBoards(boards, discards, yourHand){
+export function renderBoards(boards, discards, yourHand, playerNames){
   // create a canvas for each board inside the game-canvas-span
   const gameCanvasSpan = document.getElementById('game-canvas-span');
   gameCanvasSpan.innerHTML = ''; // Clear previous canvases
@@ -100,32 +359,21 @@ export function renderBoards(boards, discards, yourHand){
     boardCanvas.id = `board-canvas-${key}`;
     gameCanvasSpan.appendChild(boardCanvas);
     const boardContext = boardCanvas.getContext('2d');
-    // Make the canvas red
-    boardCanvas.width = 200;
-    boardCanvas.height = 200;
-    boardCanvas.style.width = '200px';
-    boardCanvas.style.height = '200px';
-    boardCanvas.style.backgroundColor = 'red';
-    boardContext.fillStyle = 'white';
-    //Put text inside the canvas to display the board
-    boardContext.font = '18px Arial';
-    boardContext.fillText(`Board: ${key}`, 20, 20);
-    //TODO draw the cards on the board.
+    let gardenBoard = new GardenBoard(boardCanvas, boardContext);
+    //Get player name from playerNames
+    const playerName = playerNames[key];
+    gardenBoard.displayBoard(`${playerName}'s Board`, board.cards);
 
-    //Add another canvas for the discards
+    //Add another canvas for the discards -- use the Hand class
     const discardCanvas = document.createElement('canvas');
     discardCanvas.id = `discard-canvas-${key}`;
     gameCanvasSpan.appendChild(discardCanvas);
     const discardContext = discardCanvas.getContext('2d');
-    discardCanvas.width = 200;
-    discardCanvas.height = 200;
-    discardCanvas.style.width = '200px';
-    discardCanvas.style.height = '200px';
-    discardCanvas.style.backgroundColor = 'blue';
-    discardContext.fillStyle = 'white';
-    //Put text inside the canvas to display the discard pile
-    discardContext.font = '18px Arial';
-    discardContext.fillText(`Discard: ${index}`, 20, 20);
+    
+    let discard = new Hand(discardCanvas, discardContext, `${playerName}'s Discard`, true);
+    discard.addCards(discards[key]);
+    discard.displayHand();
+
     //TODO draw the cards on the discard pile.
     index++;
   });
@@ -134,7 +382,9 @@ export function renderBoards(boards, discards, yourHand){
   yourHandCanvas.id = `your-hand-canvas`;
   gameCanvasSpan.appendChild(yourHandCanvas);
   const yourHandContext = yourHandCanvas.getContext('2d');
-  drawHand(yourHand, yourHandCanvas, yourHandContext);
+  let handBoard = new Hand(yourHandCanvas, yourHandContext, `Your Hand`);
+  handBoard.addCards(yourHand);
+  handBoard.displayHand();
 }
 
 

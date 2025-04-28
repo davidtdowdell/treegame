@@ -42,7 +42,10 @@ io.on('connection', socket => {
   socket.on(Constants.MSG_TYPES.START_GAME, startGame);
   // Listen for draw request
   socket.on(Constants.MSG_TYPES.DRAW_REQUEST, processDrawRequest);
-
+  // Listen for play request
+  socket.on(Constants.MSG_TYPES.PLAY_REQUEST, processPlayRequest);
+  // Listen for discard request
+  socket.on(Constants.MSG_TYPES.DISCARD_REQUEST, processDiscardRequest);
 
   socket.on(Constants.MSG_TYPES.CHAT, (message) => {
     console.log('Chat message received:', message);
@@ -75,8 +78,17 @@ function startGame() {
   gameList.startGame(this);
 }
 
-function processDrawRequest(discard_id) {
-  gameList.processDrawRequest(this, discard_id);
+function processDrawRequest(card) {
+  console.log(`Processing draw request for ${card}`);
+  gameList.processDrawRequest(this, card);
+}
+
+function processPlayRequest(card, location) {
+  gameList.processPlayRequest(this, card, location);
+}
+
+function processDiscardRequest(card) {
+  gameList.processDiscardRequest(this, card);
 }
 
 function handleInput(dir) {
@@ -84,5 +96,6 @@ function handleInput(dir) {
 }
 
 function onDisconnect() {
-  //game.removePlayer(this);
+  console.log('Player disconnected!', this.id);
+  gameList.endGame(this);
 }

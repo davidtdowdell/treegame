@@ -47,12 +47,44 @@ class GameList {
       console.log(`Game not found for player ${socket.id}`);
     }
   }
-  processDrawRequest(socket, discard_id) {
+  endGame(socket) {
+    //determine which game the player is in
+    const game = Object.values(this.games).find(game => game.players[socket.id]);
+    if (game) {
+      console.log(`Ending game ${game.name}`);
+      //game.endGame(socket);
+      delete this.games[game.id];
+    } else {
+      console.log(`Game not found for player ${socket.id}`);
+    }
+  }
+
+  processDrawRequest(socket, card) {
     //determine which game the player is in
     const game = Object.values(this.games).find(game => game.players[socket.id]);
     if (game) {
       console.log(`Processing draw request for ${socket.id}`);
-      game.processDrawRequest(socket, discard_id);
+      game.processDrawRequest(socket, card);
+    } else {
+      console.log(`Game not found for player ${socket.id}`);
+    }
+  }
+  processPlayRequest(socket, card, location) {
+    //determine which game the player is in
+    const game = Object.values(this.games).find(game => game.players[socket.id]);
+    if (game) {
+      console.log(`Processing play request for ${socket.id}`);
+      game.processPlayRequest(socket, card, location);
+    } else {
+      console.log(`Game not found for player ${socket.id}`);
+    }
+  }
+  processDiscardRequest(socket, card) {
+    //determine which game the player is in
+    const game = Object.values(this.games).find(game => game.players[socket.id]);
+    if (game) {
+      console.log(`Processing discard request for ${socket.id}`);
+      game.processDiscardRequest(socket, card);
     } else {
       console.log(`Game not found for player ${socket.id}`);
     }

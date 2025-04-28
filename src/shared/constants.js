@@ -21,6 +21,8 @@ module.exports = Object.freeze({
     START_GAME: 'start_game',
     GAME_UPDATE: 'update',
     DRAW_REQUEST: 'draw_request',
+    PLAY_REQUEST: 'play_request',
+    DISCARD_REQUEST: 'discard_request',
     INPUT: 'input',
     GAME_OVER: 'dead',
     CHAT: 'chatMessage',
@@ -29,5 +31,7 @@ module.exports = Object.freeze({
     DRAW: 'draw',
     PLAY: 'play',
     DISCARD: 'discard',
+    END: 'end'
   },
+
 });
