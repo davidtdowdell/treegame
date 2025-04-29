@@ -30,7 +30,9 @@ export function processGameUpdate(update) {
   const turnIndicator = document.getElementById('turn-indicator');
   turnIndicator.innerText = `${update.currentPlayerName}'s turn to ${update.state}`;
   renderBoards(update.boards, update.discards, update.yourHand, update.playerNames);
-  drawButtons(update.state, update.discards, update.playerNames, update.deckSize);
+  drawButtons(update.state, update.discards, update.playerNames, update.deckSize, update.scores);
+  //if update.scores are nonzero
+
 }
 
 

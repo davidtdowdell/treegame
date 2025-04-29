@@ -306,7 +306,7 @@ class GardenBoard {
   }
 }
 
-export function drawButtons(state, discards, playerNames, deckSize){
+export function drawButtons(state, discards, playerNames, deckSize, scores){
   // if draw state, make a draw button for each discard
   const drawButtons = document.getElementById('draw-buttons');
   drawButtons.innerHTML = '';
@@ -344,6 +344,16 @@ export function drawButtons(state, discards, playerNames, deckSize){
     }
     drawButtons.appendChild(discardButton);
   };
+  //if end state make a score value for each player
+  if (state === 'end') {
+    //For each player, write their name and score
+    for (const [key, score] of Object.entries(scores)) {
+      const playerName = playerNames[key];
+      const scoreValue = document.createElement('div');
+      scoreValue.innerText = `${playerName}: ${score}`;
+      drawButtons.appendChild(scoreValue);
+    }
+  }
     
 }
 

@@ -1,3 +1,4 @@
+const { find } = require('lodash');
 const Constants = require('../shared/constants');
 
 
@@ -10,6 +11,7 @@ class Card {
   }
 }
 
+
 class Garden {
   constructor() {
     this.cards = [];
@@ -19,6 +21,59 @@ class Garden {
   }
 }
 
+function scorePath(path, species) {
+  //make sure path length is at least 2
+  if (path.length < 2) {
+    return 0;
+  }
+  // make sure first and last card in path are of the same species
+  if (path[0].species !== species || path[path.length - 1].species !== species) {
+    return 0;
+  }
+  let score = path.length;
+  // if all cards in path are of the same species and there are at least 4 cards in the path, double the score
+  if (path.every(card => card.species === species) && path.length >= 4) {
+    score *= 2;
+  }
+  //if the path starts with 1, add 1 to the score
+  if (path[0].number === 1) {
+    score += 1;
+  }
+  //if the path ends with 8, add 2 to the score
+  if (path[path.length - 1].number === 8) {
+    score += 2;
+  }
+  return score;  
+}
+
+function findAllPaths(paths, cards, species, prevBestScore) {
+    let newPaths = [];
+    // iterate through each path
+    for (const path of paths) {
+      let score = scorePath(path, species);
+      if (score > prevBestScore) {
+        prevBestScore = score;
+      }
+      const lastCard = path[path.length - 1];
+      // create new paths that extend the current path
+      for (const card of cards) {
+        // check if the card is adjacent to the last card in the path
+        if (card.row === lastCard.row && Math.abs(card.col - lastCard.col) === 1 && card.number > lastCard.number) {
+          newPaths.push([...path, card]);
+        } else if (card.col === lastCard.col && Math.abs(card.row - lastCard.row) === 1 && card.number > lastCard.number) {
+          newPaths.push([...path, card]);
+        }
+      }
+    }
+    // check if any new paths were found
+    if (newPaths.length > 0) {
+      // recursively find all paths
+      return findAllPaths(newPaths, cards, species, prevBestScore);
+    } else {
+      // return the best score
+      return prevBestScore;
+    }
+}
 
 class TreeGame {
   constructor(name, id) {
@@ -34,6 +89,7 @@ class TreeGame {
     this.discards = {};
     this.boards = {};
     this.currentPlayer = null;
+    this.scores = {};
     this.state = null;
   }
   addPlayer(socket, username) {
@@ -52,11 +108,11 @@ class TreeGame {
     this.canJoin = false;
     //count the number of players
     const playerCount = Object.keys(this.players).length;
-    this.numSpecies = 2// 4 + 2 * playerCount;
-    //if (this.numSpecies > 10) {
-    //  console.log(`Too many players, max species is 10`);
-    //  this.numSpecies = 10;
-    //}
+    this.numSpecies = 4 + 2 * playerCount;
+    if (this.numSpecies > 10) {
+      console.log(`Too many players, max species is 10`);
+      this.numSpecies = 10;
+    }
     //create the deck
     this.deck = [];
     for (let i = 0; i < this.numSpecies; i++) {
@@ -109,7 +165,8 @@ class TreeGame {
         //id of current player
         currentPlayer: this.currentPlayer,
         deckSize: this.deck.length,
-
+        //scores
+        scores: this.scores,
       });
     }
   }
@@ -189,11 +246,11 @@ class TreeGame {
     this.sendGameData();
   }
   calculateScores() {
-    console.log(`Calculating scores`);
+    console.log(`Calculating this.scores`);
     // create a score object for each player
-    const scores = {};
+    this.scores = {};
     for (const player in this.players) {
-      scores[this.players[player].socket.id] = 0;
+      this.scores[this.players[player].socket.id] = 0;
     }
     // iterate through each species
     for (let i = 0; i < this.numSpecies; i++) {
@@ -246,10 +303,26 @@ class TreeGame {
         if (speciesSums[key] === maxScore) {
           console.log(`Player ${this.players[player].username} has the highest score of ${maxScore} for species ${i}`);
           //todo: add score to player
+          this.scores[key] += this.scoreSpecies(i, key)
         }
       }
     }//end for loop for species
   }
+  scoreSpecies(species, playerId) {
+    console.log(`Scoring species ${species} for player ${this.players[playerId].username}`);
+    // get the player's board
+    const board = this.boards[playerId];
+    // for each card of that species
+    const startCards = board.cards.filter(c => c.species === species);
+    let startPaths = []
+    for(const startCard of startCards) {
+      startPaths.push([startCard]);
+    }
+    let score = findAllPaths(startPaths, board.cards, species, 0);
+    console.log(`Score for species ${species} for player ${this.players[playerId].username} is ${score}`);
+    return score;
+  }
+
 
   processDiscardRequest(socket, card) {
     //check if the player is the current player
