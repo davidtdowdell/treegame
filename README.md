@@ -4,6 +4,11 @@ Built with [Node.js](https://nodejs.org/), [socket.io](https://socket.io/), and 
 
 To see this code with [Flow](https://flow.org/) typing, visit the [flow branch](https://github.com/vzhou842/example-.io-game/tree/flow).
 
+## Quick start to remind me
+Just call "npm run develop". Then check localhost:3000.
+Then use "ngrok http 3000" in another terminal to host it online. The link will be printed out in the terminal.
+
+
 ## Development
 
 To get started, make sure you have Node and NPM installed. Then,

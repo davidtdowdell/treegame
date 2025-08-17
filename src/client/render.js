@@ -97,6 +97,18 @@ class Card {
     }
     return false; 
   }
+  //highlight the card
+  highlight(context) {
+    context.strokeStyle = 'white';
+    context.lineWidth = 2;
+    context.strokeRect(this.x, this.y, this.width, this.height);
+  }
+  //unhighlight the card
+  unhighlight(context) {
+    context.strokeStyle = 'black';
+    context.lineWidth = 2;
+    context.strokeRect(this.x, this.y, this.width, this.height);
+  }
     
 }
 
@@ -160,10 +172,13 @@ class Hand {
   checkCardClick(mouseX, mouseY) {
     this.cards.forEach((card) => {
       if (card.isClicked(mouseX, mouseY)) {
+        //if the card is already selected, unselect it
+        if (selectedCard != null){
+          selectedCard.unhighlight(this.handContext);
+        }
         selectedCard = card;
+        selectedCard.highlight(this.handContext);
         this.selectedCardIndex = this.cards.indexOf(card);
-        //redraw the hand to highlight the selected card
-        this.displayHand();
       }
     });
   }
@@ -178,7 +193,7 @@ class GardenBoard {
     this.canvas.height = 800;
     this.canvas.style.width = '800px';
     this.canvas.style.height = '800px';
-    this.canvas.style.backgroundColor = 'red';
+    this.canvas.style.backgroundColor = "#f5e6bcff";
     this.context.fillStyle = 'white';
     this.cardWidth = 50;
     this.cardHeight = 70;
