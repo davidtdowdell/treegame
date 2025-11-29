@@ -86,8 +86,10 @@ class Card {
       context.closePath();
       //draw the number in the circle
       context.fillStyle = 'black';
-      context.font = '20px Arial';
-      context.fillText(this.number, x + width / 2 - 5, y + height / 2 + 5);
+      context.font = `${Math.floor(width * 0.4)}px Arial`;
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(this.number, x + width / 2, y + height / 2);
     }
   }
   //check if the card is clicked
@@ -119,9 +121,10 @@ class Hand {
   constructor(canvas, context, label, isDiscard = false) {
     this.handCanvas = canvas;
     this.handContext = context;
-    this.handCanvas.width = 700;
+    const maxWidth = Math.min(700, window.innerWidth - 20);
+    this.handCanvas.width = maxWidth;
     this.handCanvas.height = 100;
-    this.handCanvas.style.width = '700px';
+    this.handCanvas.style.width = maxWidth + 'px';
     this.handCanvas.style.height = '100px';
     this.handCanvas.style.backgroundColor = 'green';
     this.handContext.fillStyle = 'white';
@@ -146,9 +149,21 @@ class Hand {
     this.handContext.font = '18px Arial';
     this.handContext.fillText(this.label, 20, 20);
     // display each card in a row
-    const cardWidth = 50;
-    const cardHeight = 70;
-    const cardSpacing = 10;
+    let cardWidth = 50;
+    let cardHeight = 70;
+    let cardSpacing = 10;
+
+    // Calculate total width needed
+    const totalWidth = this.cards.length * (cardWidth + cardSpacing) + cardSpacing; // + cardSpacing for the last gap or initial offset logic
+    const availableWidth = this.handCanvas.width - 40; // 20px padding on each side
+
+    if (totalWidth > availableWidth) {
+      const scale = availableWidth / totalWidth;
+      cardWidth *= scale;
+      cardHeight *= scale;
+      cardSpacing *= scale;
+    }
+
     let x = 20;
     let y = 20;
     if (this.isDiscard) {
@@ -189,10 +204,11 @@ class GardenBoard {
   constructor(canvas, context) {
     this.canvas = canvas;
     this.context = context;
-    this.canvas.width = 800;
-    this.canvas.height = 800;
-    this.canvas.style.width = '800px';
-    this.canvas.style.height = '800px';
+    const maxSize = Math.min(800, window.innerWidth - 20);
+    this.canvas.width = maxSize;
+    this.canvas.height = maxSize;
+    this.canvas.style.width = maxSize + 'px';
+    this.canvas.style.height = maxSize + 'px';
     this.canvas.style.backgroundColor = "#f5e6bcff";
     this.context.fillStyle = 'white';
     this.cardWidth = 50;

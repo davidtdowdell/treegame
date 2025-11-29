@@ -9,6 +9,13 @@ const RENDER_DELAY = 100;
 const gameUpdates = [];
 let gameStart = 0;
 let firstServerTimestamp = 0;
+let lastUpdate = null;
+
+window.addEventListener('resize', () => {
+  if (lastUpdate) {
+    renderBoards(lastUpdate.boards, lastUpdate.discards, lastUpdate.yourHand, lastUpdate.playerNames);
+  }
+});
 
 export function initState() {
   gameStart = 0;
@@ -21,6 +28,7 @@ const gameView = document.getElementById('game-view');
 export function processGameUpdate(update) {
   //print the update
   console.log('Game update received:', update);
+  lastUpdate = update;
   waitForPlayersMenu.classList.add('hidden');
   gameView.classList.remove('hidden');
   //update game name
