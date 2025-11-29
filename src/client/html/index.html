@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>David's Game of Trees</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="shortcut icon" href="/assets/icon64.png"><!--TODO: switch to tree-->
   <meta property="description" content="A Card game clone. Built with Javascript and Node.js. Open source on Github.">
   <meta property="og:title" content="An example .io game">
-  <meta property="og:description" content="A complete example multiplayer .io web game implemented from scratch. Built with Javascript and Node.js. Open source on Github.">
+  <meta property="og:description"
+    content="A complete example multiplayer .io web game implemented from scratch. Built with Javascript and Node.js. Open source on Github.">
   <meta property="og:image" content="/assets/icon1200.png"><!--TODO: switch to tree-->
 </head>
+
 <body>
   <div id="game-view" class="hidden">
     <h1>Game View of <span id="game-name-value"></span></h1>
@@ -17,9 +20,8 @@
     </div>
     <div id="game-canvas-span"></div>
     <div id="draw-buttons"> </div>
-    <p>Thank you for scrolling to the bottom of the page</p>
   </div>
-  
+
   <div id="opening-menu" class="hidden">
     <h1>David's Game of Trees</h1>
     <p>
@@ -40,19 +42,29 @@
     <p>
       <strong>Username:</strong>
       <input type="text" id="username-input" placeholder="Enter your username" />
-    <button id="create-game-button">CREATE GAME</button>
-    <button id="join-game-button">JOIN GAME</button>
+      <button id="create-game-button">CREATE GAME</button>
+      <button id="join-game-button">JOIN GAME</button>
   </div>
   <div id="wait-for-players-menu" class="hidden">
     <table>
       <tr>
         <th>Waiting for players to join the game...</th>
       </tr>
-      <tr><td></td></tr>
-      <tr><td></td></tr>
-      <tr><td></td></tr>
-      <tr><td></td></tr>
-      <tr><td></td></tr>
+      <tr>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+      </tr>
     </table>
     <button id="start-game-button">START GAME</button>
   </div>
@@ -62,11 +74,26 @@
         <th>Game Name</th>
         <th>Join button</th>
       </tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
     </table>
   </div>
   <div id="disconnect-modal" class="hidden">
@@ -81,4 +108,5 @@
     <input type="text" id="chat-input" placeholder="Type a message..." />
   </div>
 </body>
+
 </html>

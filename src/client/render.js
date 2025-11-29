@@ -28,7 +28,7 @@ function setCanvasDimensions() {
   canvas.style.width = canvasWidth + 'px';
   canvas.style.height = canvasHeight + 'px';
   context.scale(dpr, dpr);
-  
+
 }
 
 const speciesColors = [
@@ -71,13 +71,13 @@ class Card {
       context.fillRect(x, y, width, height);
     }
     //draw a border around the card
-    context.strokeStyle = highlight? 'white' : 'black';
+    context.strokeStyle = highlight ? 'white' : 'black';
     context.lineWidth = 2;
     context.strokeRect(x, y, width, height);
     if (this.number !== null) {
       // draw a circle in the middle of the card
       context.beginPath();
-      context.arc(x + width / 2, y + height / 2, width / 3, 0, Math.PI * 2); 
+      context.arc(x + width / 2, y + height / 2, width / 3, 0, Math.PI * 2);
       context.fillStyle = 'white';
       context.fill();
       context.strokeStyle = 'black';
@@ -87,7 +87,7 @@ class Card {
       //draw the number in the circle
       context.fillStyle = 'black';
       context.font = '20px Arial';
-      context.fillText(this.number, x + width / 2 - 5, y + height / 2 + 5); 
+      context.fillText(this.number, x + width / 2 - 5, y + height / 2 + 5);
     }
   }
   //check if the card is clicked
@@ -95,7 +95,7 @@ class Card {
     if (mouseX > this.x && mouseX < this.x + this.width && mouseY > this.y && mouseY < this.y + this.height) {
       return true;
     }
-    return false; 
+    return false;
   }
   //highlight the card
   highlight(context) {
@@ -109,7 +109,7 @@ class Card {
     context.lineWidth = 2;
     context.strokeRect(this.x, this.y, this.width, this.height);
   }
-    
+
 }
 
 let selectedCard = null;
@@ -173,7 +173,7 @@ class Hand {
     this.cards.forEach((card) => {
       if (card.isClicked(mouseX, mouseY)) {
         //if the card is already selected, unselect it
-        if (selectedCard != null){
+        if (selectedCard != null) {
           selectedCard.unhighlight(this.handContext);
         }
         selectedCard = card;
@@ -182,7 +182,7 @@ class Hand {
       }
     });
   }
-  
+
 }
 
 class GardenBoard {
@@ -237,6 +237,7 @@ class GardenBoard {
     //put text inside the canvas to display the board
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.context.font = '18px Arial';
+    this.context.fillStyle = 'black';
     this.context.fillText(text, 20, 20);
     console.log(serverCards);
     this.setMaxAndMinRowCol(serverCards);
@@ -290,7 +291,7 @@ class GardenBoard {
           this.ghostCards.push(ghostCard);
         }
       }
-      
+
     });
 
 
@@ -321,7 +322,7 @@ class GardenBoard {
   }
 }
 
-export function drawButtons(state, discards, playerNames, deckSize, scores){
+export function drawButtons(state, discards, playerNames, deckSize, scores) {
   // if draw state, make a draw button for each discard
   const drawButtons = document.getElementById('draw-buttons');
   drawButtons.innerHTML = '';
@@ -369,12 +370,12 @@ export function drawButtons(state, discards, playerNames, deckSize, scores){
       drawButtons.appendChild(scoreValue);
     }
   }
-    
+
 }
 
 
 
-export function renderBoards(boards, discards, yourHand, playerNames){
+export function renderBoards(boards, discards, yourHand, playerNames) {
   // create a canvas for each board inside the game-canvas-span
   const gameCanvasSpan = document.getElementById('game-canvas-span');
   gameCanvasSpan.innerHTML = ''; // Clear previous canvases
@@ -394,7 +395,7 @@ export function renderBoards(boards, discards, yourHand, playerNames){
     discardCanvas.id = `discard-canvas-${key}`;
     gameCanvasSpan.appendChild(discardCanvas);
     const discardContext = discardCanvas.getContext('2d');
-    
+
     let discard = new Hand(discardCanvas, discardContext, `${playerName}'s Discard`, true);
     discard.addCards(discards[key]);
     discard.displayHand();
@@ -414,7 +415,7 @@ export function renderBoards(boards, discards, yourHand, playerNames){
 
 
 
-export function displayGameTitle(name, playerTurn, turnAction){
+export function displayGameTitle(name, playerTurn, turnAction) {
   // Display the game title on top of the canvas and hide the last menu
   waitForPlayersMenu.classList.add('hidden');
   canvas.classList.remove('hidden');
