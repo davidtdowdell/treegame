@@ -34,7 +34,14 @@ module.exports = Object.freeze({
     DRAW: 'draw',
     PLAY: 'play',
     DISCARD: 'discard',
-    END: 'end'
+    END: 'end',
   },
-
+  GAME_CONFIG: {
+    HAND_SIZE: 7,
+    MAX_SPECIES: 10,
+    MIN_SPECIES: 2,
+    SPECIES_PER_PLAYER: 2,
+    CARDS_PER_SPECIES: 8,
+    HAND_SIZE_PLAY: 9,
+  },
 });

@@ -4,7 +4,6 @@ const webpackDevMiddleware = require('webpack-dev-middleware');
 const socketio = require('socket.io');
 
 const Constants = require('../shared/constants');
-//const Game = require('./game');
 const GameList = require('./gameList');
 const webpackConfig = require('../../webpack.dev.js');
 
@@ -54,7 +53,6 @@ io.on('connection', socket => {
     io.emit(Constants.MSG_TYPES.CHAT, { username, message });
   });
 
-  socket.on(Constants.MSG_TYPES.INPUT, handleInput);
   socket.on(Constants.MSG_TYPES.LEAVE_GAME, leaveGame);
   socket.on('disconnect', onDisconnect);
 });
@@ -92,9 +90,7 @@ function processDiscardRequest(card) {
   gameList.processDiscardRequest(this, card);
 }
 
-function handleInput(dir) {
-  game.handleInput(this, dir);
-}
+
 
 function leaveGame() {
   console.log('Player left game!', this.id);
@@ -103,5 +99,4 @@ function leaveGame() {
 
 function onDisconnect() {
   console.log('Player disconnected!', this.id);
-  //gameList.endGame(this);
 }

@@ -40,7 +40,7 @@ function scorePath(path, species) {
     score += 1;
   }
   //if the path ends with 8, add 2 to the score
-  if (path[path.length - 1].number === 8) {
+  if (path[path.length - 1].number === Constants.GAME_CONFIG.CARDS_PER_SPECIES) {
     score += 2;
   }
   return score;
@@ -160,15 +160,15 @@ class TreeGame {
     this.canJoin = false;
     //count the number of players
     const playerCount = Object.keys(this.players).length;
-    this.numSpecies = 2 + 2 * playerCount;
-    if (this.numSpecies > 10) {
-      console.log(`Too many players, max species is 10`);
-      this.numSpecies = 10;
+    this.numSpecies = Constants.GAME_CONFIG.MIN_SPECIES + Constants.GAME_CONFIG.SPECIES_PER_PLAYER * playerCount;
+    if (this.numSpecies > Constants.GAME_CONFIG.MAX_SPECIES) {
+      console.log(`Too many players, max species is ${Constants.GAME_CONFIG.MAX_SPECIES}`);
+      this.numSpecies = Constants.GAME_CONFIG.MAX_SPECIES;
     }
     //create the deck
     this.deck = [];
     for (let i = 0; i < this.numSpecies; i++) {
-      for (let j = 1; j <= 8; j++) {
+      for (let j = 1; j <= Constants.GAME_CONFIG.CARDS_PER_SPECIES; j++) {
         this.deck.push(new Card(i, j));
       }
     }
@@ -185,7 +185,7 @@ class TreeGame {
     //deal 7 cards to each player
     for (const player in this.players) {
       this.playerHands[this.players[player].socket.id] = [];
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < Constants.GAME_CONFIG.HAND_SIZE; i++) {
         this.playerHands[this.players[player].socket.id].push(this.deck.pop());
       }
     }
@@ -253,9 +253,9 @@ class TreeGame {
       console.log(`Player ${this.players[socket.id].username} drew ${card.species} ${card.number} from discard pile`);
     }
     // if player hand has 9 cards, set the state to play
-    if (this.playerHands[socket.id].length === 9) {
+    if (this.playerHands[socket.id].length === Constants.GAME_CONFIG.HAND_SIZE_PLAY) {
       this.state = Constants.GAME_STATES.PLAY;
-      console.log(`Player ${this.players[socket.id].username} has 9 cards, state set to play`);
+      console.log(`Player ${this.players[socket.id].username} has ${Constants.GAME_CONFIG.HAND_SIZE_PLAY} cards, state set to play`);
     }
     //send the game state to all players
     this.sendGameData();
@@ -324,9 +324,9 @@ class TreeGame {
           const hand = this.playerHands[key];
           if (key !== hasFirstCard) {
             for (const card of hand) {
-              if (card.species === i && card.number === 8) {
+              if (card.species === i && card.number === Constants.GAME_CONFIG.CARDS_PER_SPECIES) {
                 card.number = 0;
-                console.log(`Player ${this.players[key].username} has 8 of species ${i}, score set to 0`);
+                console.log(`Player ${this.players[key].username} has ${Constants.GAME_CONFIG.CARDS_PER_SPECIES} of species ${i}, score set to 0`);
               }
             }
           }
