@@ -33,7 +33,7 @@ const io = socketio(server);
 io.on('connection', socket => {
   console.log('Player connected!', socket.id);
   // Listen for game creation
-  socket.on(Constants.MSG_TYPES.CREATE_GAME,createGame);
+  socket.on(Constants.MSG_TYPES.CREATE_GAME, createGame);
   // Listen for game list request
   socket.on(Constants.MSG_TYPES.ASK_FOR_GAME_LIST, getGameList);
   // Listen for game joining
@@ -55,23 +55,24 @@ io.on('connection', socket => {
   });
 
   socket.on(Constants.MSG_TYPES.INPUT, handleInput);
+  socket.on(Constants.MSG_TYPES.LEAVE_GAME, leaveGame);
   socket.on('disconnect', onDisconnect);
 });
 
 // Setup the Game List
 const gameList = new GameList();
 
-function createGame(username) {
-  gameList.createGame(this, username);
+function createGame(username, playerId) {
+  gameList.createGame(this, username, playerId);
 }
 
 function getGameList() {
   gameList.getAvailableGames(this);
 }
 
-function joinGame(gameId, username) {
-  console.log(`Joining game ${gameId} as ${username}`);
-  gameList.joinGame(this, gameId, username);
+function joinGame(gameId, username, playerId) {
+  console.log(`Joining game ${gameId} as ${username} with playerId ${playerId}`);
+  gameList.joinGame(this, gameId, username, playerId);
 }
 
 function startGame() {
@@ -95,7 +96,12 @@ function handleInput(dir) {
   game.handleInput(this, dir);
 }
 
+function leaveGame() {
+  console.log('Player left game!', this.id);
+  gameList.endGame(this);
+}
+
 function onDisconnect() {
   console.log('Player disconnected!', this.id);
-  gameList.endGame(this);
+  //gameList.endGame(this);
 }

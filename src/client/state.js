@@ -29,8 +29,17 @@ export function processGameUpdate(update) {
   //print the update
   console.log('Game update received:', update);
   lastUpdate = update;
+  if (update.id) {
+    localStorage.setItem('gameId', update.id);
+    // Also save username if we have it (though it's better to save it on join)
+    const usernameInput = document.getElementById('username-input');
+    if (usernameInput && usernameInput.value) {
+      localStorage.setItem('username', usernameInput.value);
+    }
+  }
   waitForPlayersMenu.classList.add('hidden');
   gameView.classList.remove('hidden');
+  document.getElementById('leave-game-button').classList.remove('hidden');
   //update game name
   const gameNameValue = document.getElementById('game-name-value');
   gameNameValue.innerText = update.name;

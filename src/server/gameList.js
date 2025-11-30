@@ -7,12 +7,12 @@ class GameList {
   constructor() {
     this.games = {};
   }
-  createGame(socket, username) {
+  createGame(socket, username, playerId) {
     console.log(`Creating game for ${username}`);
     //const gameId = this.generateGameId();
     const game = new TreeGame(`${username}'s game`, socket.id);
     this.games[socket.id] = game;
-    game.addPlayer(socket, username);
+    game.addPlayer(socket, username, playerId);
     //socket.join(socket.id);
     //socket.emit(Constants.MSG_TYPES.GAME_UPDATE, game.getState());
   }
@@ -23,13 +23,17 @@ class GameList {
     socket.emit(Constants.MSG_TYPES.GAME_LIST, gameList);
     console.log('Sending available games to player');
   }
-  joinGame(socket, gameId, username) {
+  joinGame(socket, gameId, username, playerId) {
     console.log(`Joining game ${gameId} as ${username}`);
     const game = this.games[gameId];
-    if (game && game.canJoin) {
-      game.addPlayer(socket, username);
+    // Allow joining if game is open OR if player is reconnecting
+    const isReconnecting = game && Object.values(game.players).some(p => p.playerId === playerId);
+
+    if (game && (game.canJoin || isReconnecting)) {
+      game.addPlayer(socket, username, playerId);
     } else {
       console.log(`Game ${gameId} is not available`);
+      socket.emit(Constants.MSG_TYPES.JOIN_GAME_FAILED);
     }
   }
   startGame(socket) {

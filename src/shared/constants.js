@@ -25,7 +25,10 @@ module.exports = Object.freeze({
     DISCARD_REQUEST: 'discard_request',
     INPUT: 'input',
     GAME_OVER: 'dead',
+    GAME_OVER: 'dead',
     CHAT: 'chatMessage',
+    LEAVE_GAME: 'leave_game',
+    JOIN_GAME_FAILED: 'join_game_failed',
   },
   GAME_STATES: {
     DRAW: 'draw',

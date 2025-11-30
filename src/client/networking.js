@@ -5,8 +5,17 @@ import { throttle } from 'throttle-debounce';
 import { processGameUpdate } from './state';
 import { addChatMessage } from './chatlog';
 import { listPlayers, listGames } from './playerList';
+import { v4 as uuidv4 } from 'uuid';
 
 const Constants = require('../shared/constants');
+
+// Get or create playerId
+let playerId = localStorage.getItem('playerId');
+if (!playerId) {
+  playerId = uuidv4();
+  localStorage.setItem('playerId', playerId);
+}
+console.log('Player ID:', playerId);
 
 const socketProtocol = (window.location.protocol.includes('https')) ? 'wss' : 'ws';
 const socket = io(`${socketProtocol}://${window.location.host}`, { reconnection: false });
@@ -29,6 +38,12 @@ export const connect = onGameOver => (
       console.log('Chat message received:', message);
       addChatMessage(message);
     });
+    socket.on(Constants.MSG_TYPES.JOIN_GAME_FAILED, () => {
+      console.log('Join game failed');
+      localStorage.removeItem('gameId');
+      localStorage.removeItem('username');
+      window.location.reload();
+    });
     socket.on('disconnect', () => {
       console.log('Disconnected from server.');
       document.getElementById('disconnect-modal').classList.remove('hidden');
@@ -40,16 +55,17 @@ export const connect = onGameOver => (
 );
 
 export const createGame = username => {
-  socket.emit(Constants.MSG_TYPES.CREATE_GAME, username);
+  socket.emit(Constants.MSG_TYPES.CREATE_GAME, username, playerId);
 }
 
 export const askForGameList = () => {
   socket.emit(Constants.MSG_TYPES.ASK_FOR_GAME_LIST);
 }
 
-export const joinSelectedGame = gameId => {
+export const joinSelectedGame = (gameId, username) => {
   const usernameInput = document.getElementById('username-input');
-  socket.emit(Constants.MSG_TYPES.JOIN_GAME, gameId, usernameInput.value);
+  const user = username || usernameInput.value;
+  socket.emit(Constants.MSG_TYPES.JOIN_GAME, gameId, user, playerId);
 }
 
 export const startGame = () => {
@@ -78,4 +94,10 @@ export const updateDirection = throttle(20, dir => {
 
 export const sendChatToServer = (message) => {
   socket.emit(Constants.MSG_TYPES.CHAT, message);
+}
+
+export const leaveGame = () => {
+  localStorage.removeItem('gameId');
+  localStorage.removeItem('username');
+  socket.emit(Constants.MSG_TYPES.LEAVE_GAME);
 }
