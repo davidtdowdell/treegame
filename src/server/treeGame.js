@@ -160,7 +160,7 @@ class TreeGame {
     this.canJoin = false;
     //count the number of players
     const playerCount = Object.keys(this.players).length;
-    this.numSpecies = 4 + 2 * playerCount;
+    this.numSpecies = 2 + 2 * playerCount;
     if (this.numSpecies > 10) {
       console.log(`Too many players, max species is 10`);
       this.numSpecies = 10;
