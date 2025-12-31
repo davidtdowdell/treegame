@@ -40,39 +40,39 @@ function scorePath(path, species) {
     score += 1;
   }
   //if the path ends with 8, add 2 to the score
-  if (path[path.length - 1].number === 8) {
+  if (path[path.length - 1].number === Constants.GAME_CONFIG.CARDS_PER_SPECIES) {
     score += 2;
   }
-  return score;  
+  return score;
 }
 
 function findAllPaths(paths, cards, species, prevBestScore) {
-    let newPaths = [];
-    // iterate through each path
-    for (const path of paths) {
-      let score = scorePath(path, species);
-      if (score > prevBestScore) {
-        prevBestScore = score;
-      }
-      const lastCard = path[path.length - 1];
-      // create new paths that extend the current path
-      for (const card of cards) {
-        // check if the card is adjacent to the last card in the path
-        if (card.row === lastCard.row && Math.abs(card.col - lastCard.col) === 1 && card.number > lastCard.number) {
-          newPaths.push([...path, card]);
-        } else if (card.col === lastCard.col && Math.abs(card.row - lastCard.row) === 1 && card.number > lastCard.number) {
-          newPaths.push([...path, card]);
-        }
+  let newPaths = [];
+  // iterate through each path
+  for (const path of paths) {
+    let score = scorePath(path, species);
+    if (score > prevBestScore) {
+      prevBestScore = score;
+    }
+    const lastCard = path[path.length - 1];
+    // create new paths that extend the current path
+    for (const card of cards) {
+      // check if the card is adjacent to the last card in the path
+      if (card.row === lastCard.row && Math.abs(card.col - lastCard.col) === 1 && card.number > lastCard.number) {
+        newPaths.push([...path, card]);
+      } else if (card.col === lastCard.col && Math.abs(card.row - lastCard.row) === 1 && card.number > lastCard.number) {
+        newPaths.push([...path, card]);
       }
     }
-    // check if any new paths were found
-    if (newPaths.length > 0) {
-      // recursively find all paths
-      return findAllPaths(newPaths, cards, species, prevBestScore);
-    } else {
-      // return the best score
-      return prevBestScore;
-    }
+  }
+  // check if any new paths were found
+  if (newPaths.length > 0) {
+    // recursively find all paths
+    return findAllPaths(newPaths, cards, species, prevBestScore);
+  } else {
+    // return the best score
+    return prevBestScore;
+  }
 }
 
 class TreeGame {
@@ -92,10 +92,62 @@ class TreeGame {
     this.scores = {};
     this.state = null;
   }
-  addPlayer(socket, username) {
-    console.log(`Adding player ${username} to game ${this.name}`);
-    this.players[socket.id] = { username, socket };
-    this.playerNames[socket.id] = username;
+  addPlayer(socket, username, playerId) {
+    console.log(`Adding player ${username} to game ${this.name} with playerId ${playerId}`);
+
+    // Check if player with this playerId already exists
+    const existingSocketId = Object.keys(this.players).find(key => this.players[key].playerId === playerId);
+
+    if (existingSocketId) {
+      console.log(`Player ${username} is reconnecting!`);
+      // Update the socket reference
+      const playerData = this.players[existingSocketId];
+      playerData.socket = socket;
+      playerData.username = username; // Update username just in case
+
+      // Move player data to new socket id key
+      this.players[socket.id] = playerData;
+      delete this.players[existingSocketId];
+
+      // Update other maps
+      this.playerNames[socket.id] = username;
+      if (this.playerNames[existingSocketId]) delete this.playerNames[existingSocketId];
+
+      if (this.playerHands[existingSocketId]) {
+        this.playerHands[socket.id] = this.playerHands[existingSocketId];
+        delete this.playerHands[existingSocketId];
+      }
+
+      if (this.discards[existingSocketId]) {
+        this.discards[socket.id] = this.discards[existingSocketId];
+        delete this.discards[existingSocketId];
+      }
+
+      if (this.boards[existingSocketId]) {
+        this.boards[socket.id] = this.boards[existingSocketId];
+        delete this.boards[existingSocketId];
+      }
+
+      if (this.scores[existingSocketId]) {
+        this.scores[socket.id] = this.scores[existingSocketId];
+        delete this.scores[existingSocketId];
+      }
+
+      // If this player was the current player, update currentPlayer
+      if (this.currentPlayer === existingSocketId) {
+        this.currentPlayer = socket.id;
+      }
+
+      // Send immediate update to the reconnected player
+      if (this.state) {
+        this.sendGameData();
+      }
+
+    } else {
+      this.players[socket.id] = { username, socket, playerId };
+      this.playerNames[socket.id] = username;
+    }
+
     //socket.join(this.id);
     //send player list to all players
     for (const player in this.players) {
@@ -108,17 +160,17 @@ class TreeGame {
     this.canJoin = false;
     //count the number of players
     const playerCount = Object.keys(this.players).length;
-    this.numSpecies = 4 + 2 * playerCount;
-    if (this.numSpecies > 10) {
-      console.log(`Too many players, max species is 10`);
-      this.numSpecies = 10;
+    this.numSpecies = Constants.GAME_CONFIG.MIN_SPECIES + Constants.GAME_CONFIG.SPECIES_PER_PLAYER * playerCount;
+    if (this.numSpecies > Constants.GAME_CONFIG.MAX_SPECIES) {
+      console.log(`Too many players, max species is ${Constants.GAME_CONFIG.MAX_SPECIES}`);
+      this.numSpecies = Constants.GAME_CONFIG.MAX_SPECIES;
     }
     //create the deck
     this.deck = [];
     for (let i = 0; i < this.numSpecies; i++) {
-        for (let j = 1; j <=8; j++){
-            this.deck.push(new Card(i, j));
-        }
+      for (let j = 1; j <= Constants.GAME_CONFIG.CARDS_PER_SPECIES; j++) {
+        this.deck.push(new Card(i, j));
+      }
     }
     //create a discard stack for each player
     for (const player in this.players) {
@@ -133,7 +185,7 @@ class TreeGame {
     //deal 7 cards to each player
     for (const player in this.players) {
       this.playerHands[this.players[player].socket.id] = [];
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < Constants.GAME_CONFIG.HAND_SIZE; i++) {
         this.playerHands[this.players[player].socket.id].push(this.deck.pop());
       }
     }
@@ -152,6 +204,7 @@ class TreeGame {
     console.log(`Sending game data to players with state ${this.state}`);
     for (const player in this.players) {
       this.players[player].socket.emit(Constants.MSG_TYPES.GAME_UPDATE, {
+        id: this.id,
         name: this.name,
         state: this.state,
         //only the current player's hand to that player
@@ -200,14 +253,14 @@ class TreeGame {
       console.log(`Player ${this.players[socket.id].username} drew ${card.species} ${card.number} from discard pile`);
     }
     // if player hand has 9 cards, set the state to play
-    if (this.playerHands[socket.id].length === 9) {
+    if (this.playerHands[socket.id].length === Constants.GAME_CONFIG.HAND_SIZE_PLAY) {
       this.state = Constants.GAME_STATES.PLAY;
-      console.log(`Player ${this.players[socket.id].username} has 9 cards, state set to play`);
+      console.log(`Player ${this.players[socket.id].username} has ${Constants.GAME_CONFIG.HAND_SIZE_PLAY} cards, state set to play`);
     }
     //send the game state to all players
     this.sendGameData();
   }
-  processPlayRequest(socket, card){
+  processPlayRequest(socket, card) {
     //check if the player is the current player
     if (socket.id !== this.currentPlayer) {
       console.log(`It's not your turn ${socket.id}`);
@@ -271,9 +324,9 @@ class TreeGame {
           const hand = this.playerHands[key];
           if (key !== hasFirstCard) {
             for (const card of hand) {
-              if (card.species === i && card.number === 8) {
+              if (card.species === i && card.number === Constants.GAME_CONFIG.CARDS_PER_SPECIES) {
                 card.number = 0;
-                console.log(`Player ${this.players[key].username} has 8 of species ${i}, score set to 0`);
+                console.log(`Player ${this.players[key].username} has ${Constants.GAME_CONFIG.CARDS_PER_SPECIES} of species ${i}, score set to 0`);
               }
             }
           }
@@ -315,7 +368,7 @@ class TreeGame {
     // for each card of that species
     const startCards = board.cards.filter(c => c.species === species);
     let startPaths = []
-    for(const startCard of startCards) {
+    for (const startCard of startCards) {
       startPaths.push([startCard]);
     }
     let score = findAllPaths(startPaths, board.cards, species, 0);
@@ -355,7 +408,7 @@ class TreeGame {
     this.state = Constants.GAME_STATES.DRAW;
     //set the current player to the next player
     this.currentPlayer = Object.keys(this.players)[(Object.keys(this.players).indexOf(socket.id) + 1) % Object.keys(this.players).length];
-    
+
     //if the current deck is empty, end the game
     if (this.deck.length === 0) {
       console.log(`Deck is empty, ending game`);

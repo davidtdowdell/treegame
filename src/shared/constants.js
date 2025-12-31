@@ -25,13 +25,23 @@ module.exports = Object.freeze({
     DISCARD_REQUEST: 'discard_request',
     INPUT: 'input',
     GAME_OVER: 'dead',
+    GAME_OVER: 'dead',
     CHAT: 'chatMessage',
+    LEAVE_GAME: 'leave_game',
+    JOIN_GAME_FAILED: 'join_game_failed',
   },
   GAME_STATES: {
     DRAW: 'draw',
     PLAY: 'play',
     DISCARD: 'discard',
-    END: 'end'
+    END: 'end',
   },
-
+  GAME_CONFIG: {
+    HAND_SIZE: 7,
+    MAX_SPECIES: 10,
+    MIN_SPECIES: 2,
+    SPECIES_PER_PLAYER: 2,
+    CARDS_PER_SPECIES: 8,
+    HAND_SIZE_PLAY: 9,
+  },
 });
