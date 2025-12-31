@@ -1,11 +1,14 @@
-David's example multiplayer (.io) web game. Read the walkthrough: [**How to Build a Multiplayer (.io) Web Game**](https://victorzhou.com/blog/build-an-io-game-part-1/).
+This is a somewhat vibe-coded implementation of the card game Arboretum.
+It's based on this tutorial: [**How to Build a Multiplayer (.io) Web Game**](https://victorzhou.com/blog/build-an-io-game-part-1/).
 
 Built with [Node.js](https://nodejs.org/), [socket.io](https://socket.io/), and [HTML5 Canvas](https://www.w3schools.com/html/html5_canvas.asp).
 
-To see this code with [Flow](https://flow.org/) typing, visit the [flow branch](https://github.com/vzhou842/example-.io-game/tree/flow).
-
-## Quick start to remind me
-Just call "npm run develop". Then check localhost:3000.
+## How to run it and host it so others can play it
+Make sure you have npm and nodejs installed.
+First, clone the repository to a location you like.
+Then, inside it, call "npm install".
+Then, "npm run develop". Then check localhost:3000.
+To host it online so others can play it, you can install ngrok.
 Then use "ngrok http 3000" in another terminal to host it online. The link will be printed out in the terminal.
 
 
